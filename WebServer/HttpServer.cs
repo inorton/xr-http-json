@@ -65,8 +65,12 @@ namespace XR.Server.Http
         
         public void StopServer() {
             stopServer = true;
+            closing = true;
+            while ( closing )
+                System.Threading.Thread.Sleep(500);
         }
-        
+
+        bool closing = false;
         public void Listen() {
             stopServer = false;
 
@@ -76,8 +80,11 @@ namespace XR.Server.Http
             
             while ( !stopServer ){
                 var iar = httpd.BeginGetContext( new AsyncCallback(ProcessRequest), httpd );
-                iar.AsyncWaitHandle.WaitOne();
+                do {
+                } while ( !iar.AsyncWaitHandle.WaitOne(1000) && !stopServer );
             }
+            httpd.Close();
+            closing = false;
         }
         
     }

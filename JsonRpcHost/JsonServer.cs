@@ -9,21 +9,22 @@ using System.Text.RegularExpressions;
 namespace XR.Server.Json
 {
     public class JsonServer<T> 
-        where T : Jayrock.Services.IService, new() 
+        where T : JsonRpcService, new() 
     {
 
-        T service;
+        public T Service { get; private set; }
         JsonRpcDispatcher dispatcher; 
-
-        public HttpServer HttpServer { get; set; }
 
         public Regex PathMatch { get; set; }
 
-        public JsonServer()
+        public JsonServer(T serviceObject)
         {
-            service = new T();
-            dispatcher = JsonRpcDispatcherFactory.CreateDispatcher( service );
-            HttpServer.UriRequested += HandleJsonRequest;
+            Service = serviceObject;
+            dispatcher = JsonRpcDispatcherFactory.CreateDispatcher(Service);
+        }
+
+        public JsonServer() : this( new T() )
+        {
         }
 
         public void HandleJsonRequest(object sender, UriRequestEventArgs args)
