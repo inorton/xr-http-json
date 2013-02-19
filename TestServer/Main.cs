@@ -14,16 +14,10 @@ namespace TestServer
                 args.Handled = true;
                 args.SetResponseState(200);
                 args.SetResponseType("text/html");
-                args.ResponsStream.Write(@"
-<html>
-    <head>
-        <title>Hello</title>
-    </head>
-    <body>
-        <h1>Hello</h1>
-        It Works!
-    </body>
-</html>");
+
+
+                args.ResponsStream.Write( "<html><head></head><body><h1>Hello!</h1></body></html>" );
+            
             };
 
             web.Listen();
