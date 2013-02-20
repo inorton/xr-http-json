@@ -14,9 +14,14 @@ namespace TestServer
         public string Name { get; set; }
     }
 
+    public class SomeContainer {
+        public IList<SomeClass> Items { get; set; }
+    }
+
     public interface ITestJsonRPCContract {
         IDictionary<string,Guid> GetDictionary(int count);
         SomeClass GetSomeClass( string name );
+        SomeContainer GetSomeContainer( string name );
     }
 
     public class TestJsonRPCService : JsonRpcService, ITestJsonRPCContract
@@ -42,6 +47,15 @@ namespace TestServer
         public SomeClass GetSomeClass( string name )
         {
             return new SomeClass() { Name = name };
+        }
+
+        [JsonRpcMethod]
+        public SomeContainer GetSomeContainer( string name )
+        {
+            var c = new SomeContainer() {
+                Items = new List<SomeClass>() { new SomeClass() { Name = name } },
+            };
+            return c;
         }
     }
 
@@ -73,6 +87,11 @@ namespace TestServer
         public SomeClass GetSomeClass(string name)
         {
             return (SomeClass)InvokeVargs(GetCallerMethodReturnType(), GetCallerMethodName(), name);
+        }
+
+        public SomeContainer GetSomeContainer(string name)
+        {
+            return (SomeContainer)InvokeVargs(GetCallerMethodReturnType(), GetCallerMethodName(), name );
         }
         #endregion
     }
@@ -112,6 +131,9 @@ namespace TestServer
                      
                 var rv2 = c.GetSomeClass("fred" + jh.Service.Requests );
                 Console.WriteLine( rv2.Name );
+
+                var rv3 = c.GetSomeContainer("bob" + jh.Service.Requests );
+                Console.WriteLine( rv3.Items[0].Name );
             }
 
             web.StopServer();
