@@ -6,8 +6,8 @@ using System.Collections.Generic;
 namespace XR.Server.Http
 {
     public class UriRequestEventArgs : EventArgs {
-        public HttpListenerRequest Request { get; set; }
-        HttpListenerResponse Response { get; set; }
+        public HttpListenerRequest Request { get; internal set; }
+        public HttpListenerResponse Response { get; internal set; }
 
         public StreamWriter ResponsStream { get; set; }
         public bool Handled { get; set; }
