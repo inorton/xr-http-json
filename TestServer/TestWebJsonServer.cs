@@ -22,12 +22,19 @@ namespace TestServer
         IDictionary<string,Guid> GetDictionary(int count);
         SomeClass GetSomeClass( string name );
         SomeContainer GetSomeContainer( string name );
+        string ThrowException( string msg );
     }
 
     public class TestJsonRPCService : JsonRpcService, ITestJsonRPCContract
     {
         object sync = new object();
         public int Requests { get;  set;} 
+
+        [JsonRpcMethod]
+        public string ThrowException(string msg)
+        {
+            throw new InvalidOperationException(msg);
+        }
 
         [JsonRpcMethod]
         public IDictionary<string,Guid> GetDictionary(int count)
@@ -61,6 +68,12 @@ namespace TestServer
 
     public class TestJsonRPCClient : JsonRpcClient, ITestJsonRPCContract
     {
+        protected override void OnError(object errorObject)
+        {
+            Console.Error.WriteLine("server raised error : {0}", errorObject );
+            throw new InvalidProgramException("blaaaa");
+        }
+
         static MethodBase GetCallerMethod(int offset)
         {
             var st = new StackTrace();
@@ -79,6 +92,13 @@ namespace TestServer
         }
 
         #region ITestJsonRPCContract implementation   
+
+
+        public string ThrowException(string msg)
+        {
+            return (string)InvokeVargs( GetCallerMethodReturnType(), GetCallerMethodName(), msg );
+        }
+
         public IDictionary<string, Guid> GetDictionary(int count)
         {
             return (IDictionary<string, Guid>)InvokeVargs( GetCallerMethodReturnType(), GetCallerMethodName(), count );
@@ -125,15 +145,27 @@ namespace TestServer
             while (jh.Service.Requests < 100)
             {
                 var rv = c.GetDictionary(10);
-                Console.WriteLine( rv.Count );
-                foreach ( var x in rv.Keys )
-                    Console.WriteLine( "{0} = {1}", x, rv[x] );
+                Console.WriteLine(rv.Count);
+                foreach (var x in rv.Keys)
+                    Console.WriteLine("{0} = {1}", x, rv [x]);
                      
-                var rv2 = c.GetSomeClass("fred" + jh.Service.Requests );
-                Console.WriteLine( rv2.Name );
+                var rv2 = c.GetSomeClass("fred" + jh.Service.Requests);
+                Console.WriteLine(rv2.Name);
 
-                var rv3 = c.GetSomeContainer("bob" + jh.Service.Requests );
-                Console.WriteLine( rv3.Items[0].Name );
+                var rv3 = c.GetSomeContainer("bob" + jh.Service.Requests);
+                Console.WriteLine(rv3.Items [0].Name);
+            }
+
+            // throwers
+            try
+            {
+                var err = c.ThrowException("hello world");
+                Console.Error.WriteLine(err);
+            } catch (Exception e)
+            {
+                Console.Error.WriteLine("caught:");
+                Console.Error.WriteLine(e.GetType().Name);
+                Console.Error.WriteLine(e);
             }
 
             web.StopServer();

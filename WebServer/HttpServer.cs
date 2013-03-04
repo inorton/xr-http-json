@@ -14,7 +14,9 @@ namespace XR.Server.Http
         {
             Port = 16000;
         }
-        
+
+        public bool Localhostonly { get; set; }
+
         public event UriRequestHandler UriRequested;
         
         void ProcessRequest(IAsyncResult res)
@@ -74,10 +76,12 @@ namespace XR.Server.Http
         public void Listen() {
             stopServer = false;
 
+            var addr = Localhostonly ? "localhost" : "*";
+
             var httpd = new HttpListener();
-            httpd.Prefixes.Add(string.Format("http://*:{0}/",Port));
+            httpd.Prefixes.Add(string.Format("http://{0}:{1}/",addr,Port));
             httpd.Start();
-            
+           
             while ( !stopServer ){
                 var iar = httpd.BeginGetContext( new AsyncCallback(ProcessRequest), httpd );
                 do {
