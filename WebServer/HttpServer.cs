@@ -18,13 +18,13 @@ namespace XR.Server.Http
         public bool Localhostonly { get; set; }
 
         public event UriRequestHandler UriRequested;
-        
+
         void ProcessRequest(IAsyncResult res)
         {
             var httpd = (HttpListener)res.AsyncState;
             var ctx = httpd.EndGetContext(res);
             var req = ctx.Request;
-            Console.Error.WriteLine("request from {0}", req.RemoteEndPoint.Address);
+
             var sw = new StreamWriter(ctx.Response.OutputStream);
             try
             {
