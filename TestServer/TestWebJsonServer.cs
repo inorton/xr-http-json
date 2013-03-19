@@ -71,7 +71,7 @@ namespace TestServer
         protected override void OnError(object errorObject)
         {
             Console.Error.WriteLine("server raised error : {0}", errorObject );
-            throw new InvalidProgramException("blaaaa");
+            throw new InvalidProgramException( string.Format( "{0}", errorObject)  );
         }
 
         static MethodBase GetCallerMethod(int offset)
