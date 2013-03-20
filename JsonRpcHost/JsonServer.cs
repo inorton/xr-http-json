@@ -6,11 +6,13 @@ using System.IO;
 using XR.Server.Http;
 using System.Text.RegularExpressions;
 using Jayrock.Services;
+using System.Collections;
 
 namespace XR.Server.Json
 {
     public class JsonServerErrorEventArgs : EventArgs {
         public Exception Exception { get; set; }
+        public IDictionary Request { get; set; }
     }
 
     public delegate void JsonServerError( object sender, JsonServerErrorEventArgs args );
@@ -20,12 +22,17 @@ namespace XR.Server.Json
 
         }
 
-        protected override object OnError(Exception e, System.Collections.IDictionary request)
+        protected override object OnError(Exception e, IDictionary request)
         {
+            var ex = new JsonServerErrorEventArgs() { 
+                Exception = e.InnerException, 
+                Request = request };
+            if ( ex.Exception == null ) ex.Exception = e;
+
             if ( ServerError != null ) {
-                var ex = new JsonServerErrorEventArgs() { Exception = e.InnerException };
-                if ( ex.Exception == null ) ex.Exception = e;
                 ServerError( Service, ex );
+            } else {
+                Console.Error.WriteLine("Server Error: {0}", ex.Exception);
             }
             return base.OnError(e, request);
         }
@@ -38,17 +45,14 @@ namespace XR.Server.Json
     {
 
         public T Service { get; private set; }
-        LoggingJsonRpcDispatcher dispatcher; 
+        public LoggingJsonRpcDispatcher Dispatcher { get; private set; } 
 
         public Regex PathMatch { get; set; }
 
         public JsonServer(T serviceObject)
         {
             Service = serviceObject;
-            dispatcher = new LoggingJsonRpcDispatcher( Service );
-            dispatcher.ServerError += (object sender, JsonServerErrorEventArgs args) => {
-                Console.Error.WriteLine("Server Error: {0}", args.Exception);
-            };
+            Dispatcher = new LoggingJsonRpcDispatcher( Service );
         }
 
         public JsonServer() : this( new T() )
@@ -64,7 +68,7 @@ namespace XR.Server.Json
                 args.Handled = true;
                 args.SetResponseType( "application/json" );
                 args.SetResponseState( 200 );
-                dispatcher.Process( new StreamReader(args.Request.InputStream),
+                Dispatcher.Process( new StreamReader(args.Request.InputStream),
                                    args.ResponsStream );
             }
         }

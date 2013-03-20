@@ -58,9 +58,5 @@
       <Project>{20D55278-AEA8-46B1-97F3-C2A6D0135FF5}</Project>
       <Name>WebServer</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\xr-include\xr-include\XR.Include.csproj">
-      <Project>{4EEE3FD0-1850-4D3D-88A0-FA7982A6DDA3}</Project>
-      <Name>XR.Include</Name>
-    </ProjectReference>
   </ItemGroup>
 </Project>
