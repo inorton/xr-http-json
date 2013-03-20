@@ -23,7 +23,9 @@ namespace XR.Server.Json
         protected override object OnError(Exception e, System.Collections.IDictionary request)
         {
             if ( ServerError != null ) {
-                ServerError( Service, new JsonServerErrorEventArgs() { Exception = e.InnerException } );                     
+                var ex = new JsonServerErrorEventArgs() { Exception = e.InnerException };
+                if ( ex.Exception == null ) ex.Exception = e;
+                ServerError( Service, ex );
             }
             return base.OnError(e, request);
         }
