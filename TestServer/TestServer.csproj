@@ -58,5 +58,9 @@
       <Project>{20D55278-AEA8-46B1-97F3-C2A6D0135FF5}</Project>
       <Name>WebServer</Name>
     </ProjectReference>
+    <ProjectReference Include="..\JsonRpcClient\JsonRpcClient.csproj">
+      <Project>{7743C186-0ED2-4ED3-BC2F-6BA0EEE6F123}</Project>
+      <Name>JsonRpcClient</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>

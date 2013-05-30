@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
+using XR.Client.Json;
 
 namespace TestServer
 {
@@ -18,10 +19,14 @@ namespace TestServer
         public IList<SomeClass> Items { get; set; }
     }
 
-    public interface ITestJsonRPCContract {
+    public interface ITestJsonRPCContract : IJsonRpcServiceContract {
+
         IDictionary<string,Guid> GetDictionary(int count);
+
         SomeClass GetSomeClass( string name );
+
         SomeContainer GetSomeContainer( string name );
+
         string ThrowException( string msg );
     }
 
@@ -30,13 +35,13 @@ namespace TestServer
         object sync = new object();
         public int Requests { get;  set;} 
 
-        [JsonRpcMethod]
+		[JsonRpcMethod]
         public string ThrowException(string msg)
         {
             throw new InvalidOperationException(msg);
         }
 
-        [JsonRpcMethod]
+		[JsonRpcMethod]
         public IDictionary<string,Guid> GetDictionary(int count)
         {
             lock ( sync )
@@ -50,13 +55,13 @@ namespace TestServer
             return d;
         }
 
-        [JsonRpcMethod]
+		[JsonRpcMethod]
         public SomeClass GetSomeClass( string name )
         {
             return new SomeClass() { Name = name };
         }
 
-        [JsonRpcMethod]
+		[JsonRpcMethod]
         public SomeContainer GetSomeContainer( string name )
         {
             var c = new SomeContainer() {
@@ -65,56 +70,7 @@ namespace TestServer
             return c;
         }
     }
-
-    public class TestJsonRPCClient : JsonRpcClient, ITestJsonRPCContract
-    {
-        protected override void OnError(object errorObject)
-        {
-            Console.Error.WriteLine("server raised error : {0}", errorObject );
-            throw new InvalidProgramException( string.Format( "{0}", errorObject)  );
-        }
-
-        static MethodBase GetCallerMethod(int offset)
-        {
-            var st = new StackTrace();
-            var sf = st.GetFrame(1 + offset);
-            return sf.GetMethod();
-        }
-
-        static string GetCallerMethodName()
-        {
-            return GetCallerMethod(1).Name;
-        }
-
-        static Type GetCallerMethodReturnType()
-        {
-            return ((MethodInfo)GetCallerMethod(1)).ReturnType;
-        }
-
-        #region ITestJsonRPCContract implementation   
-
-
-        public string ThrowException(string msg)
-        {
-            return (string)InvokeVargs( GetCallerMethodReturnType(), GetCallerMethodName(), msg );
-        }
-
-        public IDictionary<string, Guid> GetDictionary(int count)
-        {
-            return (IDictionary<string, Guid>)InvokeVargs( GetCallerMethodReturnType(), GetCallerMethodName(), count );
-        }
-
-        public SomeClass GetSomeClass(string name)
-        {
-            return (SomeClass)InvokeVargs(GetCallerMethodReturnType(), GetCallerMethodName(), name);
-        }
-
-        public SomeContainer GetSomeContainer(string name)
-        {
-            return (SomeContainer)InvokeVargs(GetCallerMethodReturnType(), GetCallerMethodName(), name );
-        }
-        #endregion
-    }
+	
 
     class TestWebJsonServer
     {
@@ -136,7 +92,8 @@ namespace TestServer
             jh.PathMatch = new Regex("/jsonrpc/test");
             web.UriRequested += jh.HandleJsonRequest;
 
-            var c = new TestJsonRPCClient() { Url = "http://127.0.0.1:9988/jsonrpc/test" };
+			var fact = new XR.Client.Json.JsonRpcClientFactory();
+			var c = fact.GetClient<ITestJsonRPCContract>( new Uri("http://127.0.0.1:9988/jsonrpc/test") );
 
             ThreadPool.QueueUserWorkItem((w) => {
                 ((HttpServer)w).Listen();
@@ -161,11 +118,10 @@ namespace TestServer
             {
                 var err = c.ThrowException("hello world");
                 Console.Error.WriteLine(err);
-            } catch (Exception e)
+            } catch (JsonServerErrorException e)
             {
-                Console.Error.WriteLine("caught:");
-                Console.Error.WriteLine(e.GetType().Name);
-                Console.Error.WriteLine(e);
+				Console.Error.WriteLine("Server threw an error:");
+				Console.Error.WriteLine("{0}", e );
             }
 
             web.StopServer();

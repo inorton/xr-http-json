@@ -5,54 +5,55 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>10.0.0</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{E4F128EA-9728-49BE-99D3-DB16FCD7131C}</ProjectGuid>
+    <ProjectGuid>{7743C186-0ED2-4ED3-BC2F-6BA0EEE6F123}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>XR.Server.Json</RootNamespace>
-    <AssemblyName>JsonRpcHost</AssemblyName>
+    <RootNamespace>XR.Client.Json</RootNamespace>
+    <AssemblyName>JsonRpcClient</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>True</DebugSymbols>
+    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>False</Optimize>
+    <Optimize>false</Optimize>
     <OutputPath>bin\Debug</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <ConsolePause>False</ConsolePause>
+    <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
-    <Optimize>True</Optimize>
+    <Optimize>true</Optimize>
     <OutputPath>bin\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <ConsolePause>False</ConsolePause>
+    <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="Jayrock.Json">
-      <HintPath>Jayrock.Json.dll</HintPath>
+    <Reference Include="Castle.Core">
+      <HintPath>external-libs\Castle.Core.dll</HintPath>
     </Reference>
-    <Reference Include="System.Core" />
-    <Reference Include="System.Web" />
-    <Reference Include="Jayrock">
-      <HintPath>Jayrock.dll</HintPath>
+    <Reference Include="Jayrock.Json">
+      <HintPath>..\JsonRpcHost\Jayrock.Json.dll</HintPath>
     </Reference>
     <Reference Include="Jayrock.Sandbox">
-      <HintPath>Jayrock.Sandbox.dll</HintPath>
+      <HintPath>..\JsonRpcHost\Jayrock.Sandbox.dll</HintPath>
     </Reference>
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="JsonServer.cs" />
-    <Compile Include="IJsonRpcServiceContract.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="JsonRpcClientFactory.cs" />
+    <Compile Include="DynamicJsonRpcClientBase.cs" />
+    <Compile Include="JsonServerErrorException.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\WebServer\WebServer.csproj">
-      <Project>{20D55278-AEA8-46B1-97F3-C2A6D0135FF5}</Project>
-      <Name>WebServer</Name>
+    <ProjectReference Include="..\JsonRpcHost\JsonRpcHost.csproj">
+      <Project>{E4F128EA-9728-49BE-99D3-DB16FCD7131C}</Project>
+      <Name>JsonRpcHost</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>

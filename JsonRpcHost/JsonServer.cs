@@ -8,6 +8,8 @@ using System.Text.RegularExpressions;
 using Jayrock.Services;
 using System.Collections;
 
+using System.Reflection;
+
 namespace XR.Server.Json
 {
     public class JsonServerErrorEventArgs : EventArgs {
@@ -41,7 +43,7 @@ namespace XR.Server.Json
     }
 
     public class JsonServer<T> 
-        where T : JsonRpcService, new() 
+        where T : JsonRpcService, IJsonRpcServiceContract, new() 
     {
 
         public T Service { get; private set; }
@@ -52,6 +54,7 @@ namespace XR.Server.Json
         public JsonServer(T serviceObject)
         {
             Service = serviceObject;
+
             Dispatcher = new LoggingJsonRpcDispatcher( Service );
         }
 
