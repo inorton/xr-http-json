@@ -47,6 +47,8 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="TestWebJsonServer.cs" />
+    <Compile Include="ITestJsonRPCContract.cs" />
+    <Compile Include="TestJsonRPCService.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
