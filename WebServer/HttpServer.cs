@@ -7,95 +7,104 @@ using System.Threading;
 
 namespace XR.Server.Http
 {
-	public class HttpServer
-	{
-		bool stopServer;
-        
-		public HttpServer ()
-		{
-			Port = 16000;
-		}
+    public class HttpServer
+    {
+        bool stopServer;
 
-		public bool Localhostonly { get; set; }
+        public HttpServer ()
+        {
+            Port = 16000;
+        }
 
-		public event UriRequestHandler UriRequested;
+        public bool Localhostonly { get; set; }
 
-		void ProcessRequest (IAsyncResult res)
-		{
-			var httpd = (HttpListener)res.AsyncState;
-			var ctx = httpd.EndGetContext (res);
-			var req = ctx.Request;
+        public event UriRequestHandler UriRequested;
 
-			var sw = new StreamWriter (ctx.Response.OutputStream);
-			try {
-				bool handled = false;
-      
-				if (UriRequested != null) {
-					var evtargs = new UriRequestEventArgs (ctx.Response) 
+        void ProcessRequest (IAsyncResult res)
+        {
+            if (closing || stopServer) return;
+            HttpListenerContext ctx;
+            try
+            {
+                var httpd = (HttpListener)res.AsyncState;
+                ctx = httpd.EndGetContext(res);
+            }
+            catch (ObjectDisposedException) {
+                return;
+            }
+            var req = ctx.Request;
+
+            var sw = new StreamWriter (ctx.Response.OutputStream);
+            try {
+                bool handled = false;
+
+                if (UriRequested != null) {
+                    var evtargs = new UriRequestEventArgs (ctx.Response) 
                     { 
                         Request = ctx.Request,
-                        ResponsStream = sw
+                                ResponsStream = sw
 
                     };
 
-					UriRequested (this, evtargs);
-					handled = evtargs.Handled;
-				}
+                    UriRequested (this, evtargs);
+                    handled = evtargs.Handled;
+                }
 
-				if (!handled) {
-					ctx.Response.ContentType = "text/plain";
-					ctx.Response.StatusCode = 404;
-					sw.WriteLine ("404 Not found");
-					sw.WriteLine (req.Url);
-				}
-			} catch (Exception e) {
-				ctx.Response.StatusCode = 500;
-				ctx.Response.ContentType = "text/plain";
-				sw.WriteLine ("500 Server error");
-				sw.WriteLine (e.ToString ());
-			}
-            
-            
-            
-			sw.Close ();
-		}
-        
-        
-		public int Port { get; set; }
-        
-        
-		public void StopServer ()
-		{
-			stopServer = true;
-			closing = true;
-			while (closing)
-				System.Threading.Thread.Sleep (500);
-		}
+                if (!handled) {
+                    ctx.Response.ContentType = "text/plain";
+                    ctx.Response.StatusCode = 404;
+                    sw.WriteLine ("404 Not found");
+                    sw.WriteLine (req.Url);
+                }
+            } catch (Exception e) {
+                ctx.Response.StatusCode = 500;
+                ctx.Response.ContentType = "text/plain";
+                sw.WriteLine ("500 Server error");
+                sw.WriteLine (e.ToString ());
+            }
 
-		bool closing = false;
-		public void Listen ()
-		{
-			stopServer = false;
 
-			var addr = Localhostonly ? "localhost" : "*";
 
-			var httpd = new HttpListener ();
-			httpd.Prefixes.Add (string.Format ("http://{0}:{1}/", addr, Port));
-			httpd.Start ();
-           
-			while (!stopServer) {
-				var iar = httpd.BeginGetContext (new AsyncCallback (ProcessRequest), httpd);
-				do {
-				} while ( !iar.AsyncWaitHandle.WaitOne(1000) && !stopServer );
-			}
-			httpd.Close ();
-			closing = false;
-		}
-        
-		public void BeginListen ()
-		{
-			ThreadPool.QueueUserWorkItem ((x) => Listen (), null);
-		}
-	}
+            sw.Close ();
+        }
+
+
+        public int Port { get; set; }
+
+
+        public void StopServer ()
+        {
+            stopServer = true;
+            closing = true;
+            while (closing)
+                System.Threading.Thread.Sleep (500);
+        }
+
+        bool closing = false;
+        HttpListener httpd;
+        public void Listen ()
+        {
+            stopServer = false;
+
+            var addr = Localhostonly ? "localhost" : "*";
+
+            httpd = new HttpListener ();
+            httpd.Prefixes.Add (string.Format ("http://{0}:{1}/", addr, Port));
+            httpd.Start ();
+
+            while (!stopServer) {
+                var iar = httpd.BeginGetContext (new AsyncCallback (ProcessRequest), httpd);
+                do {
+                } while ( !iar.AsyncWaitHandle.WaitOne(1000) && !stopServer );
+            }
+            httpd.Close ();
+            closing = false;
+        }
+
+        public void BeginListen ()
+        {
+            ThreadPool.QueueUserWorkItem ((x) => Listen (), null);
+        }
+    }
 }
 
