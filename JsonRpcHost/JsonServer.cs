@@ -23,6 +23,18 @@ namespace XR.Server.Json
         public LoggingJsonRpcDispatcher( IService service ) : base ( service ) {
 
         }
+        public override IDictionary Invoke(IDictionary request)
+        {
+            try
+            {
+                return base.Invoke(request);
+            }
+            catch (Exception e)
+            {
+                OnError(e, request);
+                throw;
+            }
+        }
 
         protected override object OnError(Exception e, IDictionary request)
         {
