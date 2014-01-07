@@ -100,10 +100,10 @@ namespace XR.Server.Http
             httpd.Close ();
             closing = false;
         }
-
+        
         public void BeginListen ()
         {
-            ThreadPool.QueueUserWorkItem ((x) => Listen (), null);
+            ThreadPool.QueueUserWorkItem((x) => { Listen(); }, null);
         }
     }
 }
