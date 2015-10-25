@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Collections.Generic;
 using System.Threading;
+using System.Diagnostics;
 
 namespace XR.Server.Http
 {
@@ -86,7 +87,26 @@ namespace XR.Server.Http
         {
             stopServer = false;
 
-            var addr = Localhostonly ? "localhost" : "*";
+            var addr = Localhostonly ? "localhost" : "+";
+
+            if (!Localhostonly)
+            {
+                var psi = new ProcessStartInfo("netsh",
+                    "http add urlacl http://" + addr + ":" + Port.ToString()
+                    +"/ user=Everyone listen=yes");
+                psi.UseShellExecute = false;
+                psi.RedirectStandardOutput = true;
+                psi.RedirectStandardError = true;
+                psi.WindowStyle = ProcessWindowStyle.Hidden;
+                var proc = Process.Start(psi);
+                proc.WaitForExit();
+                if (proc.ExitCode != 0)
+                {
+                    var stdout = proc.StandardOutput.ReadToEnd();
+                    if (!stdout.Contains("that file already exists"))
+                        throw new Exception(stdout);
+                }                
+            }
 
             httpd = new HttpListener ();
             httpd.Prefixes.Add (string.Format ("http://{0}:{1}/", addr, Port));
